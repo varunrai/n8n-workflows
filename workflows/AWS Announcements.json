@@ -1,0 +1,343 @@
+{
+  "id": 1,
+  "name": "AWS Announcements",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "position": [
+        -420,
+        280
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "https://aws.amazon.com/about-aws/whats-new/recent/feed/"
+      },
+      "name": "RSS Feed Read",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "position": [
+        -40,
+        220
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$node[\"RSS Feed Read\"].json[\"content\"]}}",
+              "operation": "contains",
+              "value2": "NetApp"
+            }
+          ]
+        }
+      },
+      "name": "IF",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        280,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "pageId": "https://www.notion.so/AWS-Announcements-0fab4f22a82f4644b42b4d8d07070242",
+        "title": "={{$node[\"HTMLExtract\"].json[\"title\"]}}",
+        "blockUi": {
+          "blockValues": [
+            {
+              "richText": true,
+              "text": {
+                "text": [
+                  {
+                    "text": "={{$node[\"HTMLExtract\"].json[\"date\"]}}",
+                    "annotationUi": {
+                      "italic": true
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "richText": true,
+              "text": {
+                "text": [
+                  {
+                    "text": "={{$node[\"HTMLExtract\"].json[\"content\"]}}",
+                    "annotationUi": {}
+                  }
+                ]
+              }
+            },
+            {
+              "richText": true,
+              "text": {
+                "text": [
+                  {
+                    "text": "View Original Post",
+                    "isLink": true,
+                    "textLink": "={{$node[\"IF\"].json[\"link\"]}}",
+                    "annotationUi": {}
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "name": "Notion",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [
+        660,
+        560
+      ],
+      "credentials": {
+        "notionApi": {
+          "id": "1",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{$node[\"IF\"].json[\"link\"]}}",
+        "allowUnauthorizedCerts": true,
+        "responseFormat": "string",
+        "dataPropertyName": "body",
+        "options": {
+          "followAllRedirects": true
+        }
+      },
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [
+        520,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Code here will run only once, no matter how many input items there are.\n// More info and help: https://docs.n8n.io/nodes/n8n-nodes-base.function\n// Tip: You can use luxon for dates and $jmespath for querying JSON structures\n\n// Loop over inputs and add a new field called 'myNewField' to the JSON of each one\nfor (item of items) {\n  if($node.NotionSearch.json.name == item.json.title) {\n    item.json.Exists = true;\n  }\n  else {\n    item.json.Exists = false;\n  }\n}\n\n\n// You can write logs to the browser console\nconsole.log('Done!');\n\nreturn items;"
+      },
+      "name": "Function",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        180,
+        680
+      ]
+    },
+    {
+      "parameters": {
+        "dataPropertyName": "body",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "title",
+              "cssSelector": "#aws-page-content > div > div > main > section > div.title-wrapper > div"
+            },
+            {
+              "key": "date",
+              "cssSelector": "#aws-page-content > div > div > main > section > p > span"
+            },
+            {
+              "key": "content",
+              "cssSelector": "#aws-page-content > div > div > main div.aws-text-box"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "HTMLExtract",
+      "type": "n8n-nodes-base.htmlExtract",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$node[\"Function\"].json[\"Exists\"]}}",
+              "value2": "={{false}}"
+            }
+          ]
+        }
+      },
+      "name": "IF1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        400,
+        680
+      ]
+    },
+    {
+      "parameters": {},
+      "name": "NoOp",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        660,
+        780
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "text": "={{$node[\"HTMLExtract\"].json[\"title\"]}}",
+        "limit": 1,
+        "options": {}
+      },
+      "name": "NotionSearch",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [
+        60,
+        440
+      ],
+      "credentials": {
+        "notionApi": {
+          "id": "1",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "interval": 30,
+        "unit": "minutes"
+      },
+      "name": "Interval",
+      "type": "n8n-nodes-base.interval",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        200
+      ]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        []
+      ]
+    },
+    "RSS Feed Read": {
+      "main": [
+        [
+          {
+            "node": "IF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTMLExtract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTMLExtract": {
+      "main": [
+        [
+          {
+            "node": "NotionSearch",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Function",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function": {
+      "main": [
+        [
+          {
+            "node": "IF1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF1": {
+      "main": [
+        [
+          {
+            "node": "Notion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "NoOp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NotionSearch": {
+      "main": [
+        [
+          {
+            "node": "Function",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interval": {
+      "main": [
+        [
+          {
+            "node": "RSS Feed Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2022-06-12T09:00:06.820Z",
+  "updatedAt": "2022-06-12T13:41:06.308Z",
+  "settings": {},
+  "staticData": null,
+  "tags": []
+}
