@@ -229,11 +229,6 @@
     }
   ],
   "connections": {
-    "Start": {
-      "main": [
-        []
-      ]
-    },
     "RSS Feed Read": {
       "main": [
         [
@@ -333,10 +328,21 @@
           }
         ]
       ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "RSS Feed Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "createdAt": "2022-06-12T09:00:06.820Z",
-  "updatedAt": "2022-06-12T13:41:06.308Z",
+  "updatedAt": "2022-06-24T14:18:55.541Z",
   "settings": {},
   "staticData": null,
   "tags": []
